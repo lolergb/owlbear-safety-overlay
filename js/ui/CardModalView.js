@@ -4,7 +4,7 @@
  */
 
 import { getCardImagePath } from '../utils/cardAssets.js';
-import { CARD_OVERLAY_DURATION_MS } from '../utils/constants.js';
+import { CARD_OVERLAY_DURATION_MS, BROADCAST_CARD_CLOSED } from '../utils/constants.js';
 
 /**
  * Inicializa la vista de carta para el modal de OBR.
@@ -12,10 +12,15 @@ import { CARD_OVERLAY_DURATION_MS } from '../utils/constants.js';
  * @param {Object} OBR - SDK de Owlbear (para OBR.modal.close)
  * @param {HTMLElement} root - contenedor (ej. #safety-app)
  */
-export function initCardModalView(OBR, root) {
+export async function initCardModalView(OBR, root) {
   const params = new URLSearchParams(window.location.search);
   const actionId = params.get('actionId') || 'x-card';
   const actionLabel = params.get('actionLabel') || actionId;
+
+  let playerId = null;
+  try {
+    if (OBR?.player?.getId) playerId = await OBR.player.getId();
+  } catch (_) {}
 
   const path = getCardImagePath(actionId);
 
@@ -39,6 +44,13 @@ export function initCardModalView(OBR, root) {
   closeBtn.textContent = 'Close';
 
   function closeModal() {
+    if (window._safetyCardModalTimer) {
+      clearTimeout(window._safetyCardModalTimer);
+      window._safetyCardModalTimer = null;
+    }
+    if (OBR && OBR.broadcast) {
+      OBR.broadcast.sendMessage(BROADCAST_CARD_CLOSED, { closedAt: Date.now(), senderId: playerId });
+    }
     if (OBR && OBR.modal && typeof OBR.modal.close === 'function') {
       OBR.modal.close();
     }

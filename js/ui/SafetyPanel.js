@@ -7,7 +7,7 @@ import { ToastOverlay } from './ToastOverlay.js';
 import { GmLogPanel } from './GmLogPanel.js';
 import { normalizeConfig } from '../services/safety/SafetyTypes.js';
 import { getCardModalUrl } from '../utils/modalUrl.js';
-import { CARD_OVERLAY_DURATION_MS, SAFETY_CARD_MODAL_ID } from '../utils/constants.js';
+import { CARD_OVERLAY_DURATION_MS, SAFETY_CARD_MODAL_ID, BROADCAST_CARD_CLOSED } from '../utils/constants.js';
 
 export class SafetyPanel {
   /**
@@ -19,20 +19,28 @@ export class SafetyPanel {
     this.safetyService = deps.safetyService;
     this.isGM = deps.isGM;
     this.obr = deps.obr;
+    this.betaService = deps.betaService;
     this.config = normalizeConfig(null);
     this.actions = getDefaultActions();
     this.toastOverlay = null;
     this.gmLogPanel = null;
     this._modalQueue = [];
     this._modalShowing = false;
+    this._modalFallbackTimer = null;
+    this._broadcastUnsubscribe = null;
+    this._playerId = null;
     this._toastContainer = null;
     this._actionsContainer = null;
     this._settingsContainer = null;
     this._gmLogContainer = null;
+    this._betaBadge = null;
     this._unsubscribe = null;
   }
 
   async init() {
+    try {
+      if (this.obr?.player?.getId) this._playerId = await this.obr.player.getId();
+    } catch (_) {}
     this.config = await this.safetyService.getConfig();
     this._renderStructure();
     this.toastOverlay = new ToastOverlay(this._toastContainer, { durationMs: 4000 });
@@ -44,6 +52,8 @@ export class SafetyPanel {
     this._renderSettings();
     this.gmLogPanel.render(await this.safetyService.getEvents());
     this.gmLogPanel.setVisible(this.isGM);
+
+    this._setupCardClosedListener();
 
     this._lastEventId = null;
     this._initialized = false;
@@ -66,6 +76,17 @@ export class SafetyPanel {
 
   _renderStructure() {
     this.root.innerHTML = '';
+    this.root.className = 'safety-app';
+
+    // Beta badge (si beta habilitado)
+    if (this.betaService?.isBetaEnabled()) {
+      this._betaBadge = document.createElement('div');
+      this._betaBadge.className = 'safety-beta-badge';
+      this._betaBadge.textContent = '🧪 BETA';
+      this._betaBadge.title = 'Features beta habilitadas';
+      this.root.appendChild(this._betaBadge);
+    }
+
     const header = document.createElement('header');
     header.className = 'safety-header';
     header.textContent = 'Safety';
@@ -170,6 +191,26 @@ export class SafetyPanel {
   }
 
   /**
+   * Escucha el broadcast de "card closed" para procesar el siguiente modal inmediatamente.
+   * Solo procesa si el senderId coincide con el playerId local (para que cada cliente gestione su propia cola).
+   */
+  _setupCardClosedListener() {
+    if (!this.obr?.broadcast) return;
+    this._broadcastUnsubscribe = this.obr.broadcast.onMessage(BROADCAST_CARD_CLOSED, (event) => {
+      const data = event.data || event;
+      if (data.senderId && data.senderId !== this._playerId) return;
+      if (this._modalShowing) {
+        if (this._modalFallbackTimer) {
+          clearTimeout(this._modalFallbackTimer);
+          this._modalFallbackTimer = null;
+        }
+        this._modalShowing = false;
+        setTimeout(() => this._processModalQueue(), 100);
+      }
+    });
+  }
+
+  /**
    * Añade carta a la cola y abre modal OBR (uno por uno) para que todos en la room la vean.
    */
   _showCardModal(actionId, actionLabel) {
@@ -191,17 +232,27 @@ export class SafetyPanel {
       });
     } catch (e) {
       console.warn('[Safety Overlay] Error abriendo modal OBR:', e);
-    }
-    setTimeout(() => {
       this._modalShowing = false;
       this._processModalQueue();
-    }, CARD_OVERLAY_DURATION_MS);
+      return;
+    }
+    this._modalFallbackTimer = setTimeout(() => {
+      if (this._modalShowing) {
+        this._modalShowing = false;
+        this._processModalQueue();
+      }
+    }, CARD_OVERLAY_DURATION_MS + 500);
   }
 
   destroy() {
     if (this._unsubscribe) this._unsubscribe();
+    if (this._broadcastUnsubscribe && typeof this._broadcastUnsubscribe.unsubscribe === 'function') {
+      this._broadcastUnsubscribe.unsubscribe();
+    }
+    if (this._modalFallbackTimer) clearTimeout(this._modalFallbackTimer);
     this.toastOverlay?.destroy();
     this._modalQueue = [];
     this._unsubscribe = null;
+    this._broadcastUnsubscribe = null;
   }
 }
