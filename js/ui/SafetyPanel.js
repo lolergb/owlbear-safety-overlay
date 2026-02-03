@@ -172,17 +172,8 @@ export class SafetyPanel {
     const actionLabel = btn.dataset.actionLabel || actionId;
     log('Action clicked:', actionId, actionLabel);
     
-    // Confirmación opcional en móvil para evitar misclicks
-    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || 'ontouchstart' in window);
-    log('isMobile:', isMobile);
-    if (isMobile) {
-      log('Mobile detected, showing confirm dialog');
-      if (!confirm(`¿Enviar ${actionLabel}?`)) {
-        log('User cancelled');
-        return;
-      }
-      log('User confirmed');
-    }
+    // NOTA: confirm() no funciona en iframes de Owlbear, deshabilitado
+    // El cooldown de 12s es suficiente protección anti-spam
     
     log('Calling safetyService.triggerAction...');
     try {
