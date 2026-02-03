@@ -34,7 +34,8 @@ export class ExtensionController {
 
     this.safetyPanel = new SafetyPanel(appRoot, {
       safetyService: this.safetyService,
-      isGM: this.isGM
+      isGM: this.isGM,
+      obr: this.OBR
     });
     await this.safetyPanel.init();
     log('Safety Overlay inicializado');

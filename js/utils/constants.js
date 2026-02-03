@@ -15,6 +15,9 @@ export const MAX_EVENTS = 50;
 export const TOAST_DURATION_MS = 4000;
 /** Duración del overlay de carta (auto-hide) en ms */
 export const CARD_OVERLAY_DURATION_MS = 4000;
+
+/** ID del modal OBR para la carta */
+export const SAFETY_CARD_MODAL_ID = 'safety-overlay-card';
 /** Cooldown anti-spam por usuario (ms) */
 export const ACTION_COOLDOWN_MS = 12000;
 

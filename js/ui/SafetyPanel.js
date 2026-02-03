@@ -4,24 +4,27 @@
 
 import { getDefaultActions } from '../services/safety/SafetyTypes.js';
 import { ToastOverlay } from './ToastOverlay.js';
-import { CardOverlay } from './CardOverlay.js';
 import { GmLogPanel } from './GmLogPanel.js';
 import { normalizeConfig } from '../services/safety/SafetyTypes.js';
+import { getCardModalUrl } from '../utils/modalUrl.js';
+import { CARD_OVERLAY_DURATION_MS, SAFETY_CARD_MODAL_ID } from '../utils/constants.js';
 
 export class SafetyPanel {
   /**
    * @param {HTMLElement} root - elemento raíz (ej. #safety-app)
-   * @param {Object} deps - { safetyService, isGM }
+   * @param {Object} deps - { safetyService, isGM, obr }
    */
   constructor(root, deps) {
     this.root = root;
     this.safetyService = deps.safetyService;
     this.isGM = deps.isGM;
+    this.obr = deps.obr;
     this.config = normalizeConfig(null);
     this.actions = getDefaultActions();
     this.toastOverlay = null;
-    this.cardOverlay = null;
     this.gmLogPanel = null;
+    this._modalQueue = [];
+    this._modalShowing = false;
     this._toastContainer = null;
     this._actionsContainer = null;
     this._settingsContainer = null;
@@ -33,7 +36,6 @@ export class SafetyPanel {
     this.config = await this.safetyService.getConfig();
     this._renderStructure();
     this.toastOverlay = new ToastOverlay(this._toastContainer, { durationMs: 4000 });
-    this.cardOverlay = new CardOverlay(document.body, { durationMs: 4000 });
     this.gmLogPanel = new GmLogPanel(this._gmLogContainer, {
       onClearLog: () => this.safetyService.clearLog()
     });
@@ -54,7 +56,7 @@ export class SafetyPanel {
       if (last) {
         if (this._initialized && last.id !== this._lastEventId) {
           this.toastOverlay.show(last.actionLabel);
-          this.cardOverlay.show(last.actionId, last.actionLabel);
+          this._showCardModal(last.actionId, last.actionLabel);
         }
         this._lastEventId = last.id;
         this._initialized = true;
@@ -167,10 +169,39 @@ export class SafetyPanel {
     this.gmLogPanel.setConfig(next);
   }
 
+  /**
+   * Añade carta a la cola y abre modal OBR (uno por uno) para que todos en la room la vean.
+   */
+  _showCardModal(actionId, actionLabel) {
+    this._modalQueue.push({ actionId, actionLabel: actionLabel || actionId });
+    this._processModalQueue();
+  }
+
+  async _processModalQueue() {
+    if (this._modalShowing || this._modalQueue.length === 0 || !this.obr?.modal) return;
+    this._modalShowing = true;
+    const item = this._modalQueue.shift();
+    const url = getCardModalUrl(item.actionId, item.actionLabel);
+    try {
+      await this.obr.modal.open({
+        id: SAFETY_CARD_MODAL_ID,
+        url,
+        height: 420,
+        width: 380
+      });
+    } catch (e) {
+      console.warn('[Safety Overlay] Error abriendo modal OBR:', e);
+    }
+    setTimeout(() => {
+      this._modalShowing = false;
+      this._processModalQueue();
+    }, CARD_OVERLAY_DURATION_MS);
+  }
+
   destroy() {
     if (this._unsubscribe) this._unsubscribe();
     this.toastOverlay?.destroy();
-    this.cardOverlay?.destroy();
+    this._modalQueue = [];
     this._unsubscribe = null;
   }
 }

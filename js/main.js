@@ -4,11 +4,28 @@
 
 import OBR from 'https://esm.sh/@owlbear-rodeo/sdk@3.1.0';
 import { ExtensionController } from './controllers/ExtensionController.js';
+import { initCardModalView } from './ui/CardModalView.js';
 
 let extensionController = null;
 
+function isCardModalMode() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('modal') === 'card' && params.get('actionId');
+}
+
 OBR.onReady(async () => {
   try {
+    const appRoot = document.getElementById('safety-app');
+    if (!appRoot) {
+      console.error('[Safety Overlay] #safety-app no encontrado');
+      return;
+    }
+
+    if (isCardModalMode()) {
+      initCardModalView(OBR, appRoot);
+      return;
+    }
+
     extensionController = new ExtensionController();
     await extensionController.init(OBR, { appRoot: '#safety-app' });
   } catch (e) {
@@ -27,6 +44,7 @@ OBR.onReady(async () => {
 });
 
 window.addEventListener('beforeunload', () => {
+  if (window._safetyCardModalTimer) clearTimeout(window._safetyCardModalTimer);
   extensionController?.cleanup();
 });
 

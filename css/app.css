@@ -161,6 +161,17 @@ html, body {
   white-space: nowrap;
 }
 
+/* Vista solo-carta cuando OBR abre el modal (?modal=card) */
+.safety-app--card-modal {
+  padding: 0;
+  min-height: 100vh;
+  display: block;
+}
+.safety-app--card-modal .safety-card-backdrop--modal {
+  min-height: 100vh;
+  padding: var(--spacing-lg);
+}
+
 /* Acciones: 3 botones */
 .safety-actions {
   display: flex;
