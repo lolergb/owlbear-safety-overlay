@@ -227,6 +227,46 @@ export class SafetyPanel {
     identityLabel.appendChild(document.createTextNode(' Show player identity in log'));
     wrap.appendChild(identityLabel);
 
+    // Sección de imágenes personalizadas
+    const imagesSection = document.createElement('div');
+    imagesSection.className = 'safety-settings__images';
+    
+    const imagesTitle = document.createElement('div');
+    imagesTitle.className = 'safety-settings__title';
+    imagesTitle.textContent = 'Custom Card Images (URLs)';
+    imagesSection.appendChild(imagesTitle);
+
+    const customImages = this.config.customImages || {};
+    for (const action of this.actions) {
+      const row = document.createElement('div');
+      row.className = 'safety-settings__row';
+      
+      const label = document.createElement('label');
+      label.textContent = action.label + ':';
+      label.className = 'safety-settings__label';
+      
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'safety-input';
+      input.placeholder = 'URL de imagen (dejar vacío = default)';
+      input.value = customImages[action.id] || '';
+      input.dataset.actionId = action.id;
+      input.addEventListener('change', (e) => {
+        const newCustomImages = { ...this.config.customImages };
+        if (e.target.value.trim()) {
+          newCustomImages[action.id] = e.target.value.trim();
+        } else {
+          delete newCustomImages[action.id];
+        }
+        this._saveConfig({ customImages: newCustomImages });
+      });
+      
+      row.appendChild(label);
+      row.appendChild(input);
+      imagesSection.appendChild(row);
+    }
+    
+    wrap.appendChild(imagesSection);
     this._settingsContainer.appendChild(wrap);
   }
 
@@ -247,7 +287,9 @@ export class SafetyPanel {
    * Añade carta a la cola y abre modal OBR (uno por uno) para que todos en la room la vean.
    */
   _showCardModal(actionId, actionLabel) {
-    this._modalQueue.push({ actionId, actionLabel: actionLabel || actionId });
+    // Obtener URL de imagen personalizada si existe
+    const customImageUrl = this.config?.customImages?.[actionId] || null;
+    this._modalQueue.push({ actionId, actionLabel: actionLabel || actionId, customImageUrl });
     this._processModalQueue();
   }
 
@@ -292,7 +334,7 @@ export class SafetyPanel {
     
     this._modalShowing = true;
     const item = this._modalQueue.shift();
-    const url = getCardModalUrl(item.actionId, item.actionLabel);
+    const url = getCardModalUrl(item.actionId, item.actionLabel, item.customImageUrl);
     
     log('Opening modal with URL:', url);
     log('Modal ID:', SAFETY_CARD_MODAL_ID);

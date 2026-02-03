@@ -17,15 +17,22 @@ export function initCardModalView(OBR, root) {
   console.log('[Safety Overlay] URL:', window.location.href);
   console.log('[Safety Overlay] Search params:', window.location.search);
   
+  // Fondo transparente
+  document.documentElement.classList.add('card-modal-mode');
+  document.body.style.background = 'transparent';
+  
   const params = new URLSearchParams(window.location.search);
   const actionId = params.get('actionId') || 'x-card';
   const actionLabel = params.get('actionLabel') || actionId;
+  // URL personalizada de imagen (opcional)
+  const customImageUrl = params.get('imageUrl') ? decodeURIComponent(params.get('imageUrl')) : null;
   
   console.log('[Safety Overlay] actionId:', actionId);
   console.log('[Safety Overlay] actionLabel:', actionLabel);
+  console.log('[Safety Overlay] customImageUrl:', customImageUrl);
 
-  const path = getCardImagePath(actionId);
-  console.log('[Safety Overlay] Image path:', path);
+  const path = customImageUrl || getCardImagePath(actionId);
+  console.log('[Safety Overlay] Final image path:', path);
 
   root.innerHTML = '';
   root.className = 'safety-app safety-app--card-modal';

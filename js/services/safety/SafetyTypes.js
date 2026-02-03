@@ -8,6 +8,10 @@ import { DEFAULT_CONFIG, DEFAULT_ACTIONS, MAX_EVENTS } from '../../utils/constan
  * @typedef {Object} SafetyConfig
  * @property {boolean} showIdentity
  * @property {boolean} notifyGmPrivately
+ * @property {Object} [customImages] - URLs personalizadas para las cartas
+ * @property {string} [customImages.x-card]
+ * @property {string} [customImages.pause]
+ * @property {string} [customImages.rewind]
  */
 
 /**
@@ -27,11 +31,14 @@ import { DEFAULT_CONFIG, DEFAULT_ACTIONS, MAX_EVENTS } from '../../utils/constan
  */
 export function normalizeConfig(config) {
   if (!config || typeof config !== 'object') {
-    return { ...DEFAULT_CONFIG };
+    return { ...DEFAULT_CONFIG, customImages: {} };
   }
   return {
     showIdentity: Boolean(config.showIdentity),
-    notifyGmPrivately: config.notifyGmPrivately !== false
+    notifyGmPrivately: config.notifyGmPrivately !== false,
+    customImages: config.customImages && typeof config.customImages === 'object' 
+      ? { ...config.customImages } 
+      : {}
   };
 }
 
