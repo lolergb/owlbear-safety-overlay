@@ -37,21 +37,10 @@ export function initCardModalView(OBR, root) {
   root.innerHTML = '';
   root.className = 'safety-app safety-app--card-modal';
 
-  const backdrop = document.createElement('div');
-  backdrop.className = 'safety-card-backdrop safety-card-backdrop--modal';
-
-  const wrap = document.createElement('div');
-  wrap.className = 'safety-card-wrap';
-
   const img = document.createElement('img');
   img.src = path;
   img.alt = actionLabel;
-  img.className = 'safety-card-image';
-
-  const closeBtn = document.createElement('button');
-  closeBtn.type = 'button';
-  closeBtn.className = 'safety-card-close safety-btn safety-btn--ghost';
-  closeBtn.textContent = 'Close';
+  img.className = 'safety-card-image-fullmodal';
 
   async function closeModal() {
     if (window._safetyCardModalTimer) {
@@ -70,15 +59,10 @@ export function initCardModalView(OBR, root) {
     }
   }
 
-  closeBtn.addEventListener('click', closeModal);
-  backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) closeModal();
-  });
+  // Click en la imagen cierra el modal
+  img.addEventListener('click', closeModal);
 
-  wrap.appendChild(img);
-  wrap.appendChild(closeBtn);
-  backdrop.appendChild(wrap);
-  root.appendChild(backdrop);
+  root.appendChild(img);
 
   const timer = setTimeout(closeModal, CARD_OVERLAY_DURATION_MS);
   window._safetyCardModalTimer = timer;
