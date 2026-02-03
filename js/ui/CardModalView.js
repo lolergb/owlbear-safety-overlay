@@ -4,7 +4,7 @@
  */
 
 import { getCardImagePath } from '../utils/cardAssets.js';
-import { CARD_OVERLAY_DURATION_MS, BROADCAST_CARD_CLOSED } from '../utils/constants.js';
+import { CARD_OVERLAY_DURATION_MS, SAFETY_CARD_MODAL_ID } from '../utils/constants.js';
 
 /**
  * Inicializa la vista de carta para el modal de OBR.
@@ -12,15 +12,10 @@ import { CARD_OVERLAY_DURATION_MS, BROADCAST_CARD_CLOSED } from '../utils/consta
  * @param {Object} OBR - SDK de Owlbear (para OBR.modal.close)
  * @param {HTMLElement} root - contenedor (ej. #safety-app)
  */
-export async function initCardModalView(OBR, root) {
+export function initCardModalView(OBR, root) {
   const params = new URLSearchParams(window.location.search);
   const actionId = params.get('actionId') || 'x-card';
   const actionLabel = params.get('actionLabel') || actionId;
-
-  let playerId = null;
-  try {
-    if (OBR?.player?.getId) playerId = await OBR.player.getId();
-  } catch (_) {}
 
   const path = getCardImagePath(actionId);
 
@@ -43,16 +38,20 @@ export async function initCardModalView(OBR, root) {
   closeBtn.className = 'safety-card-close safety-btn safety-btn--ghost';
   closeBtn.textContent = 'Close';
 
-  function closeModal() {
+  async function closeModal() {
     if (window._safetyCardModalTimer) {
       clearTimeout(window._safetyCardModalTimer);
       window._safetyCardModalTimer = null;
     }
-    if (OBR && OBR.broadcast) {
-      OBR.broadcast.sendMessage(BROADCAST_CARD_CLOSED, { closedAt: Date.now(), senderId: playerId });
-    }
+    try {
+      if (window.opener) {
+        window.opener.postMessage({ type: 'safety-card-modal-closed', modalId: SAFETY_CARD_MODAL_ID }, '*');
+      } else if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'safety-card-modal-closed', modalId: SAFETY_CARD_MODAL_ID }, '*');
+      }
+    } catch (_) {}
     if (OBR && OBR.modal && typeof OBR.modal.close === 'function') {
-      OBR.modal.close();
+      await OBR.modal.close(SAFETY_CARD_MODAL_ID);
     }
   }
 

@@ -4,7 +4,6 @@
 
 import { jest, beforeEach } from '@jest/globals';
 import { mockOBR } from './obr-sdk.js';
-import { resetRoleCache } from '../../js/utils/logger.js';
 
 global.OBR = mockOBR;
 
@@ -34,7 +33,6 @@ Object.defineProperty(global, 'localStorage', {
 beforeEach(() => {
   jest.clearAllMocks();
   localStorageMock.clear();
-  resetRoleCache(); // Resetear caché de rol entre tests
   mockOBR.room.getMetadata.mockResolvedValue({});
   mockOBR.room.setMetadata.mockResolvedValue(undefined);
   mockOBR.player.getRole.mockResolvedValue('GM');

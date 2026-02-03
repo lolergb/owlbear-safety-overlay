@@ -4,7 +4,6 @@
 
 import { setOBRReference, getUserRole, log, logError } from '../utils/logger.js';
 import { SafetyService } from '../services/safety/SafetyService.js';
-import { betaService } from '../services/BetaService.js';
 import { SafetyPanel } from '../ui/SafetyPanel.js';
 
 export class ExtensionController {
@@ -12,7 +11,6 @@ export class ExtensionController {
     this.OBR = null;
     this.safetyService = null;
     this.safetyPanel = null;
-    this.betaService = betaService;
     this.isGM = false;
   }
 
@@ -24,9 +22,6 @@ export class ExtensionController {
     this.OBR = OBR;
     setOBRReference(OBR);
     this.isGM = await getUserRole();
-
-    // Inicializar beta features (si aplica)
-    await this.betaService.init();
 
     this.safetyService = new SafetyService();
     this.safetyService.setOBR(OBR);
@@ -40,8 +35,7 @@ export class ExtensionController {
     this.safetyPanel = new SafetyPanel(appRoot, {
       safetyService: this.safetyService,
       isGM: this.isGM,
-      obr: this.OBR,
-      betaService: this.betaService
+      obr: this.OBR
     });
     await this.safetyPanel.init();
     log('Safety Overlay inicializado');
