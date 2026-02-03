@@ -1,0 +1,16 @@
+{
+  "name": "Safety Overlay",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "author": "lolergb",
+  "description": "X-Card, Pause y Rewind para partidas seguras en Owlbear Rodeo",
+  "homepage_url": "https://github.com/lolergb/owlbear-safety-overlay",
+  "icon": "https://owlbear-safety-overlay.netlify.app/icon.svg",
+  "action": {
+    "title": "Safety Overlay",
+    "icon": "https://owlbear-safety-overlay.netlify.app/icon.svg",
+    "popover": "/index.html",
+    "height": 420,
+    "width": 320
+  }
+}
