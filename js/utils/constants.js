@@ -22,6 +22,12 @@ export const SAFETY_CARD_MODAL_ID = 'safety-overlay-card';
 export const ACTION_COOLDOWN_MS = 12000;
 
 // ============================================
+// BROADCAST CHANNELS
+// ============================================
+/** Canal broadcast para mostrar carta a todos */
+export const BROADCAST_CHANNEL_SHOW_CARD = 'com.lole.safetyOverlay/showCard';
+
+// ============================================
 // ACCIONES POR DEFECTO
 // ============================================
 export const DEFAULT_ACTIONS = [

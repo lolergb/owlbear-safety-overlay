@@ -10,10 +10,16 @@
  * @returns {string}
  */
 export function getCardModalUrl(actionId, actionLabel) {
-  const base = window.location.origin + window.location.pathname;
-  const url = new URL(base);
+  // Construir URL base igual que owlbear-gm-vault
+  const currentPath = window.location.pathname;
+  const baseDir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+  const baseUrl = window.location.origin + baseDir;
+  
+  const url = new URL('index.html', baseUrl);
   url.searchParams.set('modal', 'card');
   url.searchParams.set('actionId', actionId || 'x-card');
   if (actionLabel) url.searchParams.set('actionLabel', encodeURIComponent(actionLabel));
+  
+  console.log('[Safety Overlay] Modal URL:', url.toString());
   return url.toString();
 }

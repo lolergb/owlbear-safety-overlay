@@ -4,7 +4,7 @@
  */
 
 import { NS_CONFIG, NS_EVENTS } from '../../utils/constants.js';
-import { logError } from '../../utils/logger.js';
+import { log, logError } from '../../utils/logger.js';
 
 export class MetadataService {
   constructor() {
@@ -78,13 +78,21 @@ export class MetadataService {
    * @returns {Promise<boolean>}
    */
   async setEvents(events) {
-    if (!this.OBR?.room?.setMetadata) return false;
+    log('MetadataService.setEvents called, events count:', events?.length || 0);
+    if (!this.OBR?.room?.setMetadata) {
+      log('ERROR: OBR.room.setMetadata not available');
+      return false;
+    }
     try {
       const meta = (await this.OBR.room.getMetadata()) || {};
-      await this.OBR.room.setMetadata({
+      log('Current metadata keys:', Object.keys(meta));
+      const newMeta = {
         ...meta,
         [NS_EVENTS]: events
-      });
+      };
+      log('Setting new metadata with events:', events?.length || 0);
+      await this.OBR.room.setMetadata(newMeta);
+      log('Metadata saved successfully');
       return true;
     } catch (e) {
       logError('MetadataService.setEvents', e);
@@ -98,14 +106,28 @@ export class MetadataService {
    * @returns {Function} unsubscribe
    */
   subscribe(callback) {
-    if (!this.OBR?.room?.onMetadataChange) return () => {};
+    log('MetadataService.subscribe called');
+    if (!this.OBR?.room?.onMetadataChange) {
+      log('ERROR: OBR.room.onMetadataChange not available');
+      return () => {};
+    }
+    
+    log('Setting up onMetadataChange listener');
     this._unsubscribe = this.OBR.room.onMetadataChange((meta) => {
+      log('onMetadataChange triggered');
       const config = meta?.[NS_CONFIG] ?? null;
       const events = Array.isArray(meta?.[NS_EVENTS]) ? meta[NS_EVENTS] : [];
+      log('Parsed from metadata - config:', !!config, 'events:', events.length);
       callback({ config, events });
     });
+    
+    log('onMetadataChange listener set, unsubscribe type:', typeof this._unsubscribe);
+    
     return () => {
-      if (this._unsubscribe && typeof this._unsubscribe.unsubscribe === 'function') {
+      log('Unsubscribing from metadata changes');
+      if (typeof this._unsubscribe === 'function') {
+        this._unsubscribe();
+      } else if (this._unsubscribe && typeof this._unsubscribe.unsubscribe === 'function') {
         this._unsubscribe.unsubscribe();
       }
       this._unsubscribe = null;

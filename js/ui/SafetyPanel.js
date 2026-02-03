@@ -7,7 +7,8 @@ import { ToastOverlay } from './ToastOverlay.js';
 import { GmLogPanel } from './GmLogPanel.js';
 import { normalizeConfig } from '../services/safety/SafetyTypes.js';
 import { getCardModalUrl } from '../utils/modalUrl.js';
-import { CARD_OVERLAY_DURATION_MS, SAFETY_CARD_MODAL_ID } from '../utils/constants.js';
+import { CARD_OVERLAY_DURATION_MS, SAFETY_CARD_MODAL_ID, BROADCAST_CHANNEL_SHOW_CARD } from '../utils/constants.js';
+import { log } from '../utils/logger.js';
 
 export class SafetyPanel {
   /**
@@ -27,6 +28,9 @@ export class SafetyPanel {
     this._modalShowing = false;
     this._modalTimer = null;
     this._toastContainer = null;
+    this._broadcastUnsubscribe = null;
+    this._lastBroadcastEventId = null;
+    this._lastEventId = null;
     this._actionsContainer = null;
     this._settingsContainer = null;
     this._gmLogContainer = null;
@@ -47,24 +51,74 @@ export class SafetyPanel {
     this.gmLogPanel.setVisible(this.isGM);
 
     this._setupModalCloseListener();
+    this._setupBroadcastListener();
 
-    this._lastEventId = null;
-    this._initialized = false;
+    // Cargar eventos iniciales y establecer último ID para no mostrar modales de eventos viejos
+    const initialEvents = await this.safetyService.getEvents();
+    if (initialEvents.length > 0) {
+      this._lastEventId = initialEvents[initialEvents.length - 1].id;
+    }
+    this._initialized = true;
+
+    // Suscribirse a cambios de metadata (actualiza log/config Y fallback para modales si broadcast falla)
     this._unsubscribe = this.safetyService.subscribeToEvents(({ config, events }) => {
+      log('Metadata change received, events count:', events?.length || 0);
       this.config = normalizeConfig(config);
       this.gmLogPanel.setConfig(this.config);
       this.gmLogPanel.render(events);
       this._updateSettingsUI();
+      
       const last = events[events.length - 1];
       if (last) {
-        if (this._initialized && last.id !== this._lastEventId) {
-          this.toastOverlay.show(last.actionLabel);
+        // Si es un evento nuevo que no hemos visto via broadcast, mostrarlo
+        if (last.id !== this._lastEventId && last.id !== this._lastBroadcastEventId) {
+          log('New event from metadata (fallback):', last.id, last.actionId);
+          this.toastOverlay.show(last.actionLabel || last.actionId);
           this._showCardModal(last.actionId, last.actionLabel);
         }
         this._lastEventId = last.id;
-        this._initialized = true;
       }
     });
+    log('SafetyPanel initialized, isGM:', this.isGM);
+  }
+
+  /**
+   * Configura listener de broadcast para recibir notificaciones de carta inmediatamente
+   */
+  _setupBroadcastListener() {
+    log('Setting up broadcast listener...');
+    log('OBR available:', !!this.obr);
+    log('OBR.broadcast available:', !!this.obr?.broadcast);
+    log('OBR.broadcast.onMessage available:', !!this.obr?.broadcast?.onMessage);
+    
+    if (!this.obr?.broadcast?.onMessage) {
+      log('ERROR: Broadcast not available!');
+      return;
+    }
+    
+    this._broadcastUnsubscribe = this.obr.broadcast.onMessage(BROADCAST_CHANNEL_SHOW_CARD, (event) => {
+      log('=== BROADCAST RECEIVED ===');
+      log('Event data:', JSON.stringify(event.data || {}));
+      const { actionId, actionLabel, eventId, senderId } = event.data || {};
+      log('Parsed - actionId:', actionId, 'eventId:', eventId);
+      
+      // Evitar duplicados
+      if (eventId && eventId === this._lastBroadcastEventId) {
+        log('Duplicate broadcast, ignoring');
+        return;
+      }
+      this._lastBroadcastEventId = eventId;
+      
+      // Mostrar toast y modal
+      if (actionId) {
+        log('Showing toast and modal for:', actionId);
+        this.toastOverlay.show(actionLabel || actionId);
+        this._showCardModal(actionId, actionLabel);
+      } else {
+        log('ERROR: No actionId in broadcast!');
+      }
+    });
+    log('Broadcast listener configured on channel:', BROADCAST_CHANNEL_SHOW_CARD);
   }
 
   _renderStructure() {
@@ -201,32 +255,71 @@ export class SafetyPanel {
   }
 
   async _processModalQueue() {
-    if (this._modalShowing || this._modalQueue.length === 0 || !this.obr?.modal) return;
+    log('_processModalQueue called');
+    log('_modalShowing:', this._modalShowing);
+    log('_modalQueue.length:', this._modalQueue.length);
+    log('obr.modal available:', !!this.obr?.modal);
+    
+    if (this._modalShowing) {
+      log('Modal already showing, waiting...');
+      return;
+    }
+    if (this._modalQueue.length === 0) {
+      log('Modal queue empty');
+      return;
+    }
+    if (!this.obr?.modal) {
+      log('ERROR: OBR.modal not available!');
+      return;
+    }
+    
     this._modalShowing = true;
     const item = this._modalQueue.shift();
     const url = getCardModalUrl(item.actionId, item.actionLabel);
+    
+    log('Opening modal with URL:', url);
+    log('Modal ID:', SAFETY_CARD_MODAL_ID);
+    
     try {
+      // Intentar cerrar modal anterior
       try {
+        log('Closing previous modal...');
         await this.obr.modal.close(SAFETY_CARD_MODAL_ID);
-      } catch (_) {}
+        log('Previous modal closed');
+      } catch (closeErr) {
+        log('No previous modal to close (normal)');
+      }
+      
+      log('Opening new modal...');
       await this.obr.modal.open({
         id: SAFETY_CARD_MODAL_ID,
         url,
         height: 420,
         width: 380
       });
+      log('Modal opened successfully!');
     } catch (e) {
-      console.warn('[Safety Overlay] Error abriendo modal OBR:', e);
+      log('ERROR opening modal:', e.message || e);
+      console.error('[Safety Overlay] Error abriendo modal OBR:', e);
       this._modalShowing = false;
       return;
     }
+    
     this._modalTimer = setTimeout(() => {
+      log('Modal timeout, calling _onModalClosed');
       this._onModalClosed();
     }, CARD_OVERLAY_DURATION_MS + 500);
   }
 
   destroy() {
     if (this._unsubscribe) this._unsubscribe();
+    if (this._broadcastUnsubscribe) {
+      if (typeof this._broadcastUnsubscribe === 'function') {
+        this._broadcastUnsubscribe();
+      } else if (this._broadcastUnsubscribe.unsubscribe) {
+        this._broadcastUnsubscribe.unsubscribe();
+      }
+    }
     this.toastOverlay?.destroy();
     this._modalQueue = [];
     if (this._modalTimer) {
@@ -234,5 +327,6 @@ export class SafetyPanel {
       this._modalTimer = null;
     }
     this._unsubscribe = null;
+    this._broadcastUnsubscribe = null;
   }
 }

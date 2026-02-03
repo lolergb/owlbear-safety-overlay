@@ -6,9 +6,8 @@
 import { MetadataService } from '../obr/MetadataService.js';
 import { createEvent, appendAndTrim } from './SafetyEventBus.js';
 import { normalizeConfig } from './SafetyTypes.js';
-import { ACTION_COOLDOWN_MS } from '../../utils/constants.js';
-import { log, logError } from '../../utils/logger.js';
-import { getUserRole } from '../../utils/logger.js';
+import { ACTION_COOLDOWN_MS, BROADCAST_CHANNEL_SHOW_CARD } from '../../utils/constants.js';
+import { log, logError, getUserRole } from '../../utils/logger.js';
 
 export class SafetyService {
   constructor() {
@@ -52,10 +51,40 @@ export class SafetyService {
     const newEvent = createEvent(actionId, actionLabel, cfg.showIdentity, userId, userName);
     const nextEvents = appendAndTrim(events, newEvent);
 
+    log('Saving events to metadata...');
     const ok = await this.metadata.setEvents(nextEvents);
+    log('Metadata save result:', ok);
+    
     if (ok) {
       this._cooldownMap.set(playerKey, now);
-      log('Safety action:', actionId, newEvent.id);
+      log('Safety action saved:', actionId, newEvent.id);
+      
+      // Broadcast inmediato para que todos los clientes abran el modal
+      log('Attempting to send broadcast...');
+      log('OBR available:', !!this.OBR);
+      log('OBR.broadcast available:', !!this.OBR?.broadcast);
+      log('OBR.broadcast.sendMessage available:', !!this.OBR?.broadcast?.sendMessage);
+      
+      try {
+        if (this.OBR?.broadcast?.sendMessage) {
+          const broadcastData = {
+            actionId,
+            actionLabel,
+            eventId: newEvent.id,
+            senderId: userId,
+            timestamp: newEvent.ts
+          };
+          log('Sending broadcast with data:', JSON.stringify(broadcastData));
+          await this.OBR.broadcast.sendMessage(BROADCAST_CHANNEL_SHOW_CARD, broadcastData);
+          log('Broadcast sent successfully!');
+        } else {
+          logError('Broadcast not available - cannot send!');
+        }
+      } catch (e) {
+        logError('Broadcast error:', e);
+      }
+    } else {
+      logError('Failed to save events to metadata!');
     }
     return ok ? { success: true } : { success: false, error: 'Failed to save' };
   }
