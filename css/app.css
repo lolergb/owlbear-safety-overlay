@@ -90,6 +90,77 @@ html, body {
   }
 }
 
+/* Card overlay: modal centrado con backdrop */
+.safety-card-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: var(--spacing-lg);
+  animation: safety-card-backdrop-in 0.2s ease;
+}
+
+.safety-card-backdrop--out {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.safety-card-backdrop--out .safety-card-wrap {
+  transform: scale(0.95);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+@keyframes safety-card-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.safety-card-wrap {
+  position: relative;
+  max-width: min(320px, 90vw);
+  max-height: min(200px, 50vh);
+  background: transparent;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: safety-card-wrap-in 0.25s ease;
+}
+
+@keyframes safety-card-wrap-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.safety-card-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.safety-card-close {
+  position: absolute;
+  bottom: -44px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 100px;
+  white-space: nowrap;
+}
+
 /* Acciones: 3 botones */
 .safety-actions {
   display: flex;

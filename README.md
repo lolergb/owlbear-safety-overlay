@@ -8,7 +8,9 @@ Extensión de seguridad para partidas: **X-Card**, **Pause** y **Rewind**. Anón
 
 - **Botón "Safety"** siempre visible (icono de la extensión en Owlbear; al pulsar se abre el panel).
 - **Panel** con 3 acciones: X-Card, Pause, Rewind.
-- Al disparar una acción se muestra a **todos** un banner arriba-centro durante 4 segundos. Si llegan varios eventos seguidos, se encolan.
+- Al disparar una acción se muestra a **todos**:
+  - Un **banner de texto** arriba-centro durante 4 segundos.
+  - Una **carta visual** (imagen) en el centro: modal con backdrop semitransparente, auto-hide 4 s, cierre manual (click o botón "Close"). Si llegan varias activaciones seguidas, se encolan y se muestran en orden.
 - **Privacidad**: anónimo por defecto (no se guarda ni muestra identidad).
 - **Solo GM**:
   - **Notify GM privately** (por defecto activado): el GM ve los eventos en un log solo para GM.
@@ -72,6 +74,8 @@ Tests incluidos:
 - **Trim a 50**: `appendAndTrim` mantiene como máximo los últimos 50 eventos.
 - **Anonimato**: con `showIdentity=false`, los eventos compartidos no incluyen `userId` ni `userName`.
 - **Cola de toasts**: lógica de cola del overlay (unit test de la UI de toasts).
+- **Cola de cartas**: CardOverlay muestra las cartas en orden cuando se encolan varias.
+- **Mapping actionId → asset**: `getCardImagePath` devuelve la ruta correcta para x-card, pause, rewind; actionId desconocido no rompe (fallback a x-card).
 
 ## Estructura del proyecto
 
@@ -85,6 +89,7 @@ js/
   ui/
     SafetyPanel.js         # Panel principal (acciones + settings GM + log)
     ToastOverlay.js        # Cola de toasts, 4s
+    CardOverlay.js         # Carta visual centrada (modal, cola, auto-close, Close)
     GmLogPanel.js          # Lista de eventos solo GM
   services/
     obr/
@@ -97,6 +102,9 @@ js/
     constants.js
     logger.js
     helpers.js
+    cardAssets.js          # actionId -> ruta imagen carta
+public/
+  cards/                   # Imágenes de cartas (x-card.svg, pause.svg, rewind.svg)
 css/
   app.css
 index.html

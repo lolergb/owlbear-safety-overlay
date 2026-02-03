@@ -13,6 +13,8 @@ export const NS_EVENTS = 'com.lole.safetyOverlay/events';
 // ============================================
 export const MAX_EVENTS = 50;
 export const TOAST_DURATION_MS = 4000;
+/** Duración del overlay de carta (auto-hide) en ms */
+export const CARD_OVERLAY_DURATION_MS = 4000;
 /** Cooldown anti-spam por usuario (ms) */
 export const ACTION_COOLDOWN_MS = 12000;
 

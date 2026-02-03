@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="xcard-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d1f4e"/>
+      <stop offset="100%" style="stop-color:#1a1033"/>
+    </linearGradient>
+    <filter id="xcard-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="320" height="200" rx="12" ry="12" fill="url(#xcard-bg)" filter="url(#xcard-shadow)" stroke="#967ACC" stroke-width="2"/>
+  <text x="160" y="72" text-anchor="middle" font-family="Roboto, sans-serif" font-size="28" font-weight="700" fill="#fff">X-Card</text>
+  <circle cx="160" cy="118" r="24" fill="none" stroke="#967ACC" stroke-width="3"/>
+  <text x="160" y="125" text-anchor="middle" font-family="Roboto, sans-serif" font-size="32" font-weight="700" fill="#967ACC"></text>
+  <text x="160" y="168" text-anchor="middle" font-family="Roboto, sans-serif" font-size="14" fill="#b8a9d4">Stop  I need a break</text>
+</svg>

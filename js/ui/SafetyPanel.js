@@ -4,6 +4,7 @@
 
 import { getDefaultActions } from '../services/safety/SafetyTypes.js';
 import { ToastOverlay } from './ToastOverlay.js';
+import { CardOverlay } from './CardOverlay.js';
 import { GmLogPanel } from './GmLogPanel.js';
 import { normalizeConfig } from '../services/safety/SafetyTypes.js';
 
@@ -19,6 +20,7 @@ export class SafetyPanel {
     this.config = normalizeConfig(null);
     this.actions = getDefaultActions();
     this.toastOverlay = null;
+    this.cardOverlay = null;
     this.gmLogPanel = null;
     this._toastContainer = null;
     this._actionsContainer = null;
@@ -31,6 +33,7 @@ export class SafetyPanel {
     this.config = await this.safetyService.getConfig();
     this._renderStructure();
     this.toastOverlay = new ToastOverlay(this._toastContainer, { durationMs: 4000 });
+    this.cardOverlay = new CardOverlay(document.body, { durationMs: 4000 });
     this.gmLogPanel = new GmLogPanel(this._gmLogContainer, {
       onClearLog: () => this.safetyService.clearLog()
     });
@@ -51,6 +54,7 @@ export class SafetyPanel {
       if (last) {
         if (this._initialized && last.id !== this._lastEventId) {
           this.toastOverlay.show(last.actionLabel);
+          this.cardOverlay.show(last.actionId, last.actionLabel);
         }
         this._lastEventId = last.id;
         this._initialized = true;
@@ -166,6 +170,7 @@ export class SafetyPanel {
   destroy() {
     if (this._unsubscribe) this._unsubscribe();
     this.toastOverlay?.destroy();
+    this.cardOverlay?.destroy();
     this._unsubscribe = null;
   }
 }

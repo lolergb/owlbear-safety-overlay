@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <defs>
+    <linearGradient id="pause-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#0f1f33"/>
+    </linearGradient>
+    <filter id="pause-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="320" height="200" rx="12" ry="12" fill="url(#pause-bg)" filter="url(#pause-shadow)" stroke="#5a9fd4" stroke-width="2"/>
+  <text x="160" y="72" text-anchor="middle" font-family="Roboto, sans-serif" font-size="28" font-weight="700" fill="#fff">Pause</text>
+  <g transform="translate(160, 118)">
+    <rect x="-20" y="-20" width="12" height="40" rx="3" fill="#5a9fd4"/>
+    <rect x="4" y="-20" width="12" height="40" rx="3" fill="#5a9fd4"/>
+  </g>
+  <text x="160" y="168" text-anchor="middle" font-family="Roboto, sans-serif" font-size="14" fill="#8bb8e8">Let's pause and adjust</text>
+</svg>
