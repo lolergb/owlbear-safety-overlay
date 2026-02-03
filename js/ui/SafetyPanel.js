@@ -146,36 +146,62 @@ export class SafetyPanel {
   }
 
   _renderActions() {
+    log('Rendering actions, count:', this.actions.length);
     this._actionsContainer.innerHTML = '';
     for (const action of this.actions) {
+      log('Creating button for action:', action.id, action.label);
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'safety-btn safety-btn--action';
       btn.textContent = action.label;
       btn.dataset.actionId = action.id;
       btn.dataset.actionLabel = action.label;
-      btn.addEventListener('click', (e) => this._onActionClick(e));
+      btn.addEventListener('click', (e) => {
+        log('Button clicked:', action.id);
+        this._onActionClick(e);
+      });
       this._actionsContainer.appendChild(btn);
     }
+    log('Actions rendered');
   }
 
   async _onActionClick(e) {
+    log('_onActionClick called');
     const btn = e.currentTarget;
     const actionId = btn.dataset.actionId;
     const actionLabel = btn.dataset.actionLabel || actionId;
+    log('Action clicked:', actionId, actionLabel);
+    
     // Confirmación opcional en móvil para evitar misclicks
     const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || 'ontouchstart' in window);
-    if (isMobile && !confirm(`¿Enviar ${actionLabel}?`)) return;
-    const result = await this.safetyService.triggerAction(actionId, actionLabel);
-    if (!result.success && result.error) {
-      if (result.error.includes('Cooldown')) {
-        btn.disabled = true;
-        btn.textContent = 'Espera...';
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.textContent = actionLabel;
-        }, 2000);
+    log('isMobile:', isMobile);
+    if (isMobile) {
+      log('Mobile detected, showing confirm dialog');
+      if (!confirm(`¿Enviar ${actionLabel}?`)) {
+        log('User cancelled');
+        return;
       }
+      log('User confirmed');
+    }
+    
+    log('Calling safetyService.triggerAction...');
+    try {
+      const result = await this.safetyService.triggerAction(actionId, actionLabel);
+      log('triggerAction result:', JSON.stringify(result));
+      if (!result.success && result.error) {
+        log('Action failed:', result.error);
+        if (result.error.includes('Cooldown')) {
+          btn.disabled = true;
+          btn.textContent = 'Espera...';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = actionLabel;
+          }, 2000);
+        }
+      }
+    } catch (err) {
+      log('ERROR in triggerAction:', err.message || err);
+      console.error('[Safety Overlay] triggerAction error:', err);
     }
   }
 
