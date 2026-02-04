@@ -349,6 +349,17 @@ export class SafetyPanel {
         log('No previous modal to close (normal)');
       }
       
+      // Cerrar el popover antes de abrir el modal fullscreen
+      // Esto evita conflictos con el fullScreen de OBR
+      try {
+        if (this.obr?.popover?.close) {
+          log('Closing popover before modal...');
+          await this.obr.popover.close();
+        }
+      } catch (popoverErr) {
+        log('Could not close popover (normal)');
+      }
+      
       log('Opening new modal...');
       await this.obr.modal.open({
         id: SAFETY_CARD_MODAL_ID,
