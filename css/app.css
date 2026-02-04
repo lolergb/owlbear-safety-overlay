@@ -162,7 +162,15 @@ html, body {
 
 /* Vista solo-carta cuando OBR abre el modal (?modal=card) */
 html.card-modal-mode,
-html.card-modal-mode body,
+html.card-modal-mode body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
 html.card-modal-mode .safety-app,
 html.card-modal-mode .safety-app--card-modal {
   margin: 0 !important;
@@ -170,11 +178,7 @@ html.card-modal-mode .safety-app--card-modal {
   width: 100% !important;
   height: 100% !important;
   overflow: hidden !important;
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-.safety-app--card-modal {
+  background: rgba(0, 0, 0, 0.7) !important;
   display: flex;
   align-items: center;
   justify-content: center;
