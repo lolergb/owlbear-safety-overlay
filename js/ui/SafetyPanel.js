@@ -345,21 +345,8 @@ export class SafetyPanel {
         log('No previous modal to close (normal)');
       }
       
-      // Cerrar el popover antes de abrir el modal fullscreen
-      // Esto evita conflictos con el fullScreen de OBR
-      // IMPORTANTE: El GM suele tener el popover abierto, causando diferencias visuales
-      try {
-        if (this.obr?.popover?.close) {
-          log('Closing popover before modal (isGM:', this.isGM, ')...');
-          await this.obr.popover.close();
-          // Delay más largo para GM (que suele tener popover abierto)
-          const delay = this.isGM ? 300 : 100;
-          log('Waiting', delay, 'ms for popover to close...');
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      } catch (popoverErr) {
-        log('Could not close popover (normal):', popoverErr.message || popoverErr);
-      }
+      // NO cerrar el popover - dejar que OBR maneje el fullScreen naturalmente
+      // Cerrar el popover causa inconsistencias entre GM y Player
       
       log('Opening new modal...');
       await this.obr.modal.open({
