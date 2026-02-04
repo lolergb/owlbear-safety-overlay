@@ -13,26 +13,13 @@ import { CARD_OVERLAY_DURATION_MS, SAFETY_CARD_MODAL_ID } from '../utils/constan
  * @param {HTMLElement} root - contenedor (ej. #safety-app)
  */
 export function initCardModalView(OBR, root) {
-  console.log('[Safety Overlay] === CARD MODAL VIEW INIT ===');
-  console.log('[Safety Overlay] URL:', window.location.href);
-  console.log('[Safety Overlay] Search params:', window.location.search);
-  
-  // Configuración estándar - dejar que OBR maneje el estilo
-  document.documentElement.classList.add('card-modal-mode');
-  
   const params = new URLSearchParams(window.location.search);
   const actionId = params.get('actionId') || 'x-card';
   const actionLabel = params.get('actionLabel') || actionId;
-  // URL personalizada de imagen (opcional)
   const customImageUrl = params.get('imageUrl') ? decodeURIComponent(params.get('imageUrl')) : null;
-  
-  console.log('[Safety Overlay] actionId:', actionId);
-  console.log('[Safety Overlay] actionLabel:', actionLabel);
-  console.log('[Safety Overlay] customImageUrl:', customImageUrl);
 
   const path = customImageUrl || getCardImagePath(actionId);
-  console.log('[Safety Overlay] Final image path:', path);
-
+  
   root.innerHTML = '';
   root.className = 'safety-app safety-app--card-modal';
 

@@ -345,15 +345,12 @@ export class SafetyPanel {
         log('No previous modal to close (normal)');
       }
       
-      // NO cerrar el popover - dejar que OBR maneje el fullScreen naturalmente
-      // Cerrar el popover causa inconsistencias entre GM y Player
-      
       log('Opening new modal...');
       await this.obr.modal.open({
         id: SAFETY_CARD_MODAL_ID,
         url,
-        height: 250,
-        width: 350
+        height: 420,
+        width: 380
       });
       log('Modal opened successfully!');
     } catch (e) {
