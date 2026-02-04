@@ -17,9 +17,10 @@ export function initCardModalView(OBR, root) {
   console.log('[Safety Overlay] URL:', window.location.href);
   console.log('[Safety Overlay] Search params:', window.location.search);
   
-  // Fondo transparente
+  // Fondo transparente - forzar en todos los elementos
   document.documentElement.classList.add('card-modal-mode');
-  document.body.style.background = 'transparent';
+  document.documentElement.style.cssText = 'background: transparent !important; background-color: transparent !important;';
+  document.body.style.cssText = 'background: transparent !important; background-color: transparent !important; margin: 0; padding: 0;';
   
   const params = new URLSearchParams(window.location.search);
   const actionId = params.get('actionId') || 'x-card';
@@ -36,6 +37,7 @@ export function initCardModalView(OBR, root) {
 
   root.innerHTML = '';
   root.className = 'safety-app safety-app--card-modal';
+  root.style.cssText = 'background: transparent !important; background-color: transparent !important;';
 
   const img = document.createElement('img');
   img.src = path;

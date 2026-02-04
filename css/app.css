@@ -129,7 +129,6 @@ html, body {
   max-height: min(200px, 50vh);
   background: transparent;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   animation: safety-card-wrap-in 0.25s ease;
 }
 
@@ -162,26 +161,23 @@ html, body {
 }
 
 /* Vista solo-carta cuando OBR abre el modal (?modal=card) */
+html.card-modal-mode,
+html.card-modal-mode body,
+html.card-modal-mode .safety-app,
+html.card-modal-mode .safety-app--card-modal {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 .safety-app--card-modal {
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  overflow: hidden;
-}
-
-html.card-modal-mode,
-html.card-modal-mode body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: transparent;
 }
 
 /* Imagen que ocupa todo el modal (sin paper/backdrop de OBR) */
@@ -193,7 +189,6 @@ html.card-modal-mode body {
   display: block;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   animation: safety-card-pop-in 0.3s ease;
 }
 
