@@ -24,7 +24,7 @@ export class GmLogPanel {
 
   /**
    * Renderiza la lista de eventos
-   * @param {Array} events - [{ id, ts, actionId, actionLabel, userId?, userName? }]
+   * @param {Array} events - [{ id, t, a, l, u?, n? }] (campos cortos: t=ts, a=actionId, l=actionLabel, u=userId, n=userName)
    */
   render(events) {
     if (!this.container) return;
@@ -55,10 +55,13 @@ export class GmLogPanel {
     for (const ev of reversed) {
       const li = document.createElement('li');
       li.className = 'safety-gmlog__item';
-      const time = new Date(ev.ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      let text = `${time} — ${ev.actionLabel}`;
-      if (showName && (ev.userName || ev.userId)) {
-        text += ` (${ev.userName || ev.userId || '—'})`;
+      // Soporte para formato antiguo (ts, actionId, actionLabel) y nuevo (t, a, l)
+      const ts = ev.t || ev.ts || Date.now();
+      const actionLabel = ev.l || ev.actionLabel || ev.a || ev.actionId || '—';
+      const time = new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      let text = `${time} — ${actionLabel}`;
+      if (showName && (ev.n || ev.userName || ev.u || ev.userId)) {
+        text += ` (${ev.n || ev.userName || ev.u || ev.userId || '—'})`;
       }
       li.textContent = text;
       this._listEl.appendChild(li);

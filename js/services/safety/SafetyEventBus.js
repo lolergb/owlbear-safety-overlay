@@ -8,24 +8,26 @@ import { MAX_EVENTS } from '../../utils/constants.js';
 import { generateEventId } from '../../utils/helpers.js';
 
 /**
- * Crea un nuevo evento. Si showIdentity es false, no incluye userId ni userName.
+ * Crea un nuevo evento optimizado para tamaño (campos cortos).
+ * Si showIdentity es false, no incluye userId ni userName.
  * @param {string} actionId
  * @param {string} actionLabel
  * @param {boolean} showIdentity
  * @param {string} [userId]
  * @param {string} [userName]
- * @returns {{ id: string, ts: number, actionId: string, actionLabel: string, userId?: string, userName?: string }}
+ * @returns {{ id: string, t: number, a: string, l: string, u?: string, n?: string }}
  */
 export function createEvent(actionId, actionLabel, showIdentity, userId, userName) {
+  // Campos cortos para reducir tamaño: t=ts, a=actionId, l=actionLabel, u=userId, n=userName
   const ev = {
     id: generateEventId(),
-    ts: Date.now(),
-    actionId,
-    actionLabel
+    t: Date.now(),
+    a: actionId,
+    l: actionLabel
   };
   if (showIdentity && (userId || userName)) {
-    if (userId) ev.userId = userId;
-    if (userName) ev.userName = userName;
+    if (userId) ev.u = userId;
+    if (userName) ev.n = userName;
   }
   return ev;
 }

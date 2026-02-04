@@ -60,7 +60,8 @@ export class SafetyPanel {
     }
     this._initialized = true;
 
-    // Suscribirse a cambios de metadata (actualiza log/config Y fallback para modales si broadcast falla)
+    // Suscribirse a cambios de metadata (SOLO para actualizar log/config del GM)
+    // Los modales se muestran exclusivamente via broadcast (más rápido y confiable)
     this._unsubscribe = this.safetyService.subscribeToEvents(({ config, events }) => {
       log('Metadata change received, events count:', events?.length || 0);
       this.config = normalizeConfig(config);
@@ -68,14 +69,9 @@ export class SafetyPanel {
       this.gmLogPanel.render(events);
       this._updateSettingsUI();
       
+      // Actualizar lastEventId solo para tracking (no para mostrar modales)
       const last = events[events.length - 1];
       if (last) {
-        // Si es un evento nuevo que no hemos visto via broadcast, mostrarlo
-        if (last.id !== this._lastEventId && last.id !== this._lastBroadcastEventId) {
-          log('New event from metadata (fallback):', last.id, last.actionId);
-          this.toastOverlay.show(last.actionLabel || last.actionId);
-          this._showCardModal(last.actionId, last.actionLabel);
-        }
         this._lastEventId = last.id;
       }
     });

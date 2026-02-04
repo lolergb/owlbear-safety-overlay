@@ -3,11 +3,12 @@
  */
 
 /**
- * Genera un id único para eventos
+ * Genera un id único para eventos (optimizado para tamaño)
  * @returns {string}
  */
 export function generateEventId() {
-  return `ev_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  // Formato más corto: timestamp + 6 chars aleatorios
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
