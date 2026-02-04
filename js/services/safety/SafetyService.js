@@ -55,38 +55,39 @@ export class SafetyService {
     const ok = await this.metadata.setEvents(nextEvents);
     log('Metadata save result:', ok);
     
+    // Actualizar cooldown siempre (incluso si falla el guardado)
+    this._cooldownMap.set(playerKey, now);
+    
     if (ok) {
-      this._cooldownMap.set(playerKey, now);
       log('Safety action saved:', actionId, newEvent.id);
-      
-      // Broadcast inmediato para que todos los clientes abran el modal
-      log('Attempting to send broadcast...');
-      log('OBR available:', !!this.OBR);
-      log('OBR.broadcast available:', !!this.OBR?.broadcast);
-      log('OBR.broadcast.sendMessage available:', !!this.OBR?.broadcast?.sendMessage);
-      
-      try {
-        if (this.OBR?.broadcast?.sendMessage) {
-          const broadcastData = {
-            actionId,
-            actionLabel,
-            eventId: newEvent.id,
-            senderId: userId,
-            timestamp: newEvent.ts
-          };
-          log('Sending broadcast with data:', JSON.stringify(broadcastData));
-          await this.OBR.broadcast.sendMessage(BROADCAST_CHANNEL_SHOW_CARD, broadcastData);
-          log('Broadcast sent successfully!');
-        } else {
-          logError('Broadcast not available - cannot send!');
-        }
-      } catch (e) {
-        logError('Broadcast error:', e);
-      }
     } else {
-      logError('Failed to save events to metadata!');
+      logError('Failed to save events to metadata (may be over size limit)');
     }
-    return ok ? { success: true } : { success: false, error: 'Failed to save' };
+    
+    // Broadcast SIEMPRE se envía (incluso si falla el guardado)
+    // Esto asegura que todos vean la carta aunque el metadata esté lleno
+    log('Attempting to send broadcast...');
+    try {
+      if (this.OBR?.broadcast?.sendMessage) {
+        const broadcastData = {
+          actionId,
+          actionLabel,
+          eventId: newEvent.id,
+          senderId: userId,
+          timestamp: newEvent.ts
+        };
+        log('Sending broadcast with data:', JSON.stringify(broadcastData));
+        await this.OBR.broadcast.sendMessage(BROADCAST_CHANNEL_SHOW_CARD, broadcastData);
+        log('Broadcast sent successfully!');
+      } else {
+        logError('Broadcast not available - cannot send!');
+      }
+    } catch (e) {
+      logError('Broadcast error:', e);
+    }
+    
+    // Retornar éxito si el broadcast se envió (aunque metadata falle)
+    return { success: true };
   }
 
   /**

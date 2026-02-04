@@ -355,6 +355,8 @@ export class SafetyPanel {
         if (this.obr?.popover?.close) {
           log('Closing popover before modal...');
           await this.obr.popover.close();
+          // Pequeño delay para asegurar que el popover se cierre completamente
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       } catch (popoverErr) {
         log('Could not close popover (normal)');

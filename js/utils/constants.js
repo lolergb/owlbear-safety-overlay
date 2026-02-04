@@ -11,7 +11,7 @@ export const NS_EVENTS = 'com.lole.safetyOverlay/events';
 // ============================================
 // LÍMITES Y TIEMPOS
 // ============================================
-export const MAX_EVENTS = 50;
+export const MAX_EVENTS = 20; // Reducido para evitar límite de 16KB de OBR metadata
 export const TOAST_DURATION_MS = 4000;
 /** Duración del overlay de carta (auto-hide) en ms */
 export const CARD_OVERLAY_DURATION_MS = 4000;
