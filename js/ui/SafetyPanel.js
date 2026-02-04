@@ -349,8 +349,8 @@ export class SafetyPanel {
       await this.obr.modal.open({
         id: SAFETY_CARD_MODAL_ID,
         url,
-        height: 420,
-        width: 380
+        height: 250,
+        width: 350
       });
       log('Modal opened successfully!');
     } catch (e) {
